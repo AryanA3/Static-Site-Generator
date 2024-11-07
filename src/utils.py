@@ -2,6 +2,15 @@ from textnode import *
 import unittest
 import re
 
+
+block_type_paragraph = "paragraph"
+block_type_heading = "heading"
+block_type_code = "code"
+block_type_quote = "quote"
+block_type_olist = "ordered_list"
+block_type_ulist = "unordered_list"
+
+
 def split_nodes_delimiter(old_nodes:TextNode, delimiter, text_type):
     new_nodes = []
     for node in old_nodes:
@@ -88,6 +97,7 @@ def split_nodes_link(old_nodes):
             new_nodes.append(TextNode(original_text, TextType.TEXT))
     return new_nodes
 
+
 def text_to_textnodes(text):
     nodes = [TextNode(text, TextType.TEXT)]
     nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
@@ -96,6 +106,7 @@ def text_to_textnodes(text):
     nodes = split_nodes_image(nodes)
     nodes = split_nodes_link(nodes)
     return nodes
+
 
 def extract_markdown_images(text):
     pattern = r"!\[([^\[\]]*)\]\(([^\(\)]*)\)"
@@ -107,3 +118,102 @@ def extract_markdown_links(text):
     pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
     matches = re.findall(pattern, text)
     return matches
+
+
+
+#Mine
+# def markdown_to_blocks(markdown:str):
+#     splited = markdown.split('\n')
+#     blocks = []
+#     i = 0
+#     while i < len(splited):
+#         line = splited[i]
+
+#         if line == '':
+#             pass
+
+#         elif line.startswith('# '):
+#             blocks.append(line.strip())
+        
+#         elif line.startswith('* '):
+#             _list = [line.strip()]
+#             i += 1
+#             while i < len(splited):
+#                 line = splited[i]
+#                 if line == '':
+#                     pass
+#                 elif not line.startswith('* '):
+#                     break
+                
+#                 _list.append(line.strip())
+#                 i += 1
+            
+#             blocks.append('\n'.join(_list))
+#             i -= 1
+        
+#         else:
+#             _list = [line.strip()]
+#             i += 1
+#             while i < len(splited):
+#                 line = splited[i]
+#                 if line == '':
+#                     pass
+#                 elif line.startswith('* ') or line.startswith('* '):
+#                     break
+                
+#                 _list.append(line.strip())
+#                 i += 1
+            
+#             blocks.append(''.join(_list))
+#             i -= 1
+        
+#         i += 1
+#     return blocks
+        
+
+
+#provided code
+#didnt read correctly that blocks where separated by \n\n i though it was just \n :()
+
+def markdown_to_blocks(markdown):
+    blocks = markdown.split("\n\n")
+    filtered_blocks = []
+    for block in blocks:
+        if block == "":
+            continue
+        block = block.strip()
+        filtered_blocks.append(block)
+    return filtered_blocks
+
+
+
+def block_to_block_type(block):
+    lines = block.split("\n")
+
+    if block.startswith(("# ", "## ", "### ", "#### ", "##### ", "###### ")):
+        return block_type_heading
+    if len(lines) > 1 and lines[0].startswith("```") and lines[-1].startswith("```"):
+        return block_type_code
+    if block.startswith(">"):
+        for line in lines:
+            if not line.startswith(">"):
+                return block_type_paragraph
+        return block_type_quote
+    if block.startswith("* "):
+        for line in lines:
+            if not line.startswith("* "):
+                return block_type_paragraph
+        return block_type_ulist
+    if block.startswith("- "):
+        for line in lines:
+            if not line.startswith("- "):
+                return block_type_paragraph
+        return block_type_ulist
+    if block.startswith("1. "):
+        i = 1
+        for line in lines:
+            if not line.startswith(f"{i}. "):
+                return block_type_paragraph
+            i += 1
+        return block_type_olist
+    return block_type_paragraph
